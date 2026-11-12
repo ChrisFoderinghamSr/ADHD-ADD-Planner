@@ -1,0 +1,11 @@
+{
+  "name": "daylight-block-planner",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A browser-based day planner with 24-hour time and 10–30 minute focus blocks.",
+  "scripts": {
+    "test": "node --test tests/planner.test.cjs",
+    "start": "node server.cjs"
+  },
+  "engines": { "node": ">=18" }
+}

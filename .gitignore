@@ -1,0 +1,18 @@
+# Dependencies and local development output.
+node_modules/
+coverage/
+*.log
+
+# Keep environment values and downloaded planner backups out of Git.
+.env
+.env.*
+!.env.example
+Daylight-Backup-*.json
+Daylight-Plan-*.csv
+Daylight-Every-Minute-*.csv
+Daylight-Calendar-*.ics
+*.zip
+
+# Operating system files.
+.DS_Store
+Thumbs.db
