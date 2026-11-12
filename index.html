@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#204d42">
+  <meta name="description" content="A gentle day planner. Turn tasks into small focus blocks, protect your downtime, and see the whole picture in 24-hour time.">
+  <title>Daylight · One block at a time</title>
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="planner.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <a class="skip" href="#content">Skip to planner</a>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Main navigation">
+      <a class="brand" href="#day" data-action="view" data-view="day"><img src="icon.svg" alt="" width="40" height="40"><span>daylight<span class="brand-note">One block at a time.</span></span></a>
+      <div class="workspace-label">MY SPACE <span class="local-badge">LOCAL</span></div>
+      <nav id="main-nav">
+        <button class="nav-item" data-action="view" data-view="day"><span data-icon="sun"></span>Daily plan<span class="nav-dot"></span></button>
+        <button class="nav-item" data-action="view" data-view="tasks"><span data-icon="inbox"></span>Task inbox<span id="inbox-count" class="count">0</span></button>
+        <button class="nav-item" data-action="view" data-view="week"><span data-icon="calendar"></span>Calendar</button>
+        <button class="nav-item" data-action="view" data-view="insights"><span data-icon="chart"></span>My pace</button>
+      </nav>
+      <div class="sidebar-card"><span class="small-sun" data-icon="spark"></span><strong>Small is a good start.</strong><p>You don’t have to do everything. Just find your next little step.</p><button class="text-button" data-action="focus-next">Find my next block <span aria-hidden="true">↗</span></button></div>
+      <div class="sidebar-bottom"><button class="nav-item" data-action="settings"><span data-icon="settings"></span>My day & settings</button><button class="nav-item" data-action="export"><span data-icon="download"></span>Export & backup</button><div class="profile"><span id="avatar">Y</span><div><strong id="profile-name">Your space</strong><small>Saved on this browser</small></div><span class="save-dot" title="Browser storage status" id="save-dot"></span></div></div>
+    </aside>
+    <div class="main-shell">
+      <header class="topbar"><div class="breadcrumb"><span data-icon="sun"></span><span id="view-breadcrumb">My daily plan</span></div><div class="top-actions"><span class="clock" id="clock">00:00</span><span class="time-label">24-hour time</span><button class="icon-button" aria-label="Export and backup" data-action="export"><span data-icon="download"></span></button><button class="button primary" data-action="add-task"><span aria-hidden="true">＋</span> New task</button></div></header>
+      <main id="content" tabindex="-1"></main>
+      <footer class="app-footer"><span>A little structure. A little more space.</span><span>24-hour clock · Works offline · Your pace matters</span></footer>
+    </div>
+  </div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <dialog id="setup-dialog" class="dialog wide-dialog" aria-labelledby="setup-title">
+    <form id="setup-form">
+      <div class="dialog-header"><div><div class="eyebrow">LET’S MAKE ROOM FOR YOUR DAY</div><h2 id="setup-title">What does your day look like?</h2></div><button class="icon-button" type="button" data-action="close-dialog" aria-label="Close settings">×</button></div>
+      <p class="muted">Start with your everyday rhythm. We’ll protect your sleep and commitments, then find space for small tasks. Use <strong>24-hour HH:MM</strong> only.</p>
+      <label>Your name <span class="optional">(optional)</span><input name="name" maxlength="60" placeholder="What should we call you?" autocomplete="given-name"></label>
+      <div class="section-caption">01 <span>YOUR DAILY RHYTHM</span></div>
+      <div class="form-grid"><label>Wake / active day starts<input name="wake" type="text" inputmode="numeric" pattern="([01][0-9]|2[0-3]):[0-5][0-9]" placeholder="07:00" required></label><label>Sleep / active day ends<input name="sleep" type="text" inputmode="numeric" pattern="([01][0-9]|2[0-3]):[0-5][0-9]" placeholder="23:00" required></label></div>
+      <p class="field-hint">Overnight schedules work too. For example: wake 17:00, sleep 09:00.</p>
+      <div class="section-caption">02 <span>WORK OR SCHOOL HOURS</span></div>
+      <fieldset class="plain-fieldset"><legend>Which days do you work or attend school?</legend><div class="weekdays" id="setup-weekdays"></div></fieldset>
+      <div class="form-grid"><label>Work / school starts<input name="workStart" type="text" inputmode="numeric" pattern="([01][0-9]|2[0-3]):[0-5][0-9]" placeholder="09:00" required></label><label>Work / school ends<input name="workEnd" type="text" inputmode="numeric" pattern="([01][0-9]|2[0-3]):[0-5][0-9]" placeholder="17:00" required></label></div>
+      <p class="field-hint">Deselect every day if you don’t need a work window. Add meals, commutes, meetings, and other fixed times after this step.</p>
+      <div class="section-caption">03 <span>SMALL BLOCKS, BUILT-IN BREATHING ROOM</span></div>
+      <div class="form-grid"><label>Default focus block<select name="block"><option value="10">10 minutes</option><option value="15">15 minutes</option><option value="20">20 minutes</option><option value="30">30 minutes</option></select></label><label>Reset after a block<select name="buffer"><option value="0">No automatic reset</option><option value="5">5 minutes</option><option value="10">10 minutes</option></select></label></div>
+      <p id="setup-error" class="form-error" role="alert"></p>
+      <div class="dialog-footer"><button type="button" class="button secondary" data-action="demo" id="demo-button">Explore an example</button><button class="button primary" type="submit">Build my day <span aria-hidden="true">→</span></button></div>
+    </form>
+  </dialog>
+
+  <dialog id="task-dialog" class="dialog wide-dialog" aria-labelledby="task-title">
+    <form id="task-form"><input type="hidden" name="id">
+      <div class="dialog-header"><div><div class="eyebrow">ONE THING AT A TIME</div><h2 id="task-title">Make room for a task</h2></div><button class="icon-button" type="button" data-action="close-dialog" aria-label="Close task form">×</button></div>
+      <label>What needs to get done?<input name="title" maxlength="120" required placeholder="A small, specific thing…"></label>
+      <div class="form-grid"><label>Category<select name="category"><option>Work</option><option>Home</option><option>Personal</option><option>Learning</option><option>Health</option></select></label><label>Where can it fit?<select name="context"><option value="any">Any waking free time</option><option value="work">Inside work / school hours</option><option value="personal">Outside work / school hours</option></select></label></div>
+      <div class="form-grid"><label>Estimated active time <span class="optional">(minutes)</span><input name="minutes" type="number" min="1" max="1440" step="1" value="15" required></label><label>Focus block<select name="block"><option value="10">10 minutes</option><option value="15">15 minutes</option><option value="20">20 minutes</option><option value="30">30 minutes</option></select></label></div>
+      <p id="average-hint" class="field-hint">Start with your best guess. Record actual task times to learn your own average.</p>
+      <div class="form-grid"><label>First planned date<input name="date" type="date" min="1900-01-01" max="2200-12-31" required></label><label>Due date <span class="optional">(optional)</span><input name="due" type="date" min="1900-01-01" max="2200-12-31"></label></div>
+      <div class="form-grid"><label>Priority<select name="priority"><option value="1">1 · Must do</option><option value="2">2 · Important</option><option value="3">3 · When there’s room</option></select></label><label>Repeat<select name="repeat"><option value="none">Just this date</option><option value="daily">Every day</option><option value="weekdays">Every weekday</option><option value="weekly">Every week</option><option value="monthly">Every month</option><option value="quarterly">Every quarter</option></select></label></div>
+      <label>What do you need first? <span class="optional">(one requirement per line)</span><textarea name="requirements" maxlength="5000" rows="3" placeholder="Materials, access, a document, someone’s reply…"></textarea></label>
+      <label class="check-label"><input name="ready" type="checkbox" checked> I have everything I need to start</label>
+      <label>Break it into tiny steps <span class="optional">(one step per line)</span><textarea name="steps" maxlength="5000" rows="3" placeholder="Open the document&#10;Write the first paragraph&#10;Check and save"></textarea></label>
+      <label>Notes <span class="optional">(optional)</span><textarea name="notes" maxlength="2000" rows="2" placeholder="What will ‘done’ look like?"></textarea></label>
+      <p id="task-error" class="form-error" role="alert"></p>
+      <div class="dialog-footer"><button class="button secondary" type="button" data-action="close-dialog">Cancel</button><button class="button primary" type="submit">Save & schedule <span aria-hidden="true">→</span></button></div>
+    </form>
+  </dialog>
+
+  <dialog id="event-dialog" class="dialog" aria-labelledby="event-title"><form id="event-form"><input name="id" type="hidden">
+    <div class="dialog-header"><div><div class="eyebrow">PROTECT YOUR TIME</div><h2 id="event-title">A fixed commitment</h2></div><button class="icon-button" type="button" data-action="close-dialog" aria-label="Close commitment form">×</button></div>
+    <p class="muted">Meals, appointments, commutes, family time. Focus blocks will work around these.</p>
+    <label>What’s happening?<input name="title" maxlength="120" placeholder="Lunch, school pickup, team meeting…" required></label>
+    <div class="form-grid"><label>Starts <span class="optional">(24-hour)</span><input name="start" type="text" inputmode="numeric" pattern="([01][0-9]|2[0-3]):[0-5][0-9]" placeholder="12:00" required></label><label>Ends <span class="optional">(24-hour)</span><input name="end" type="text" inputmode="numeric" pattern="(([01][0-9]|2[0-3]):[0-5][0-9]|24:00)" placeholder="12:30" required></label></div>
+    <p class="field-hint">An end earlier than the start continues into the next day. Use 24:00 for the end of the day.</p>
+    <label>First date<input name="date" type="date" min="1900-01-01" max="2200-12-31" required></label>
+    <div class="form-grid"><label>Category<select name="category"><option>Personal</option><option>Work</option><option>Home</option><option>Health</option><option>Learning</option></select></label><label>Repeat<select name="repeat"><option value="none">Just this date</option><option value="daily">Every day</option><option value="weekdays">Every weekday</option><option value="weekly">Every week</option><option value="monthly">Every month</option><option value="quarterly">Every quarter</option></select></label></div>
+    <p id="event-error" class="form-error" role="alert"></p><div class="dialog-footer"><button class="button secondary" type="button" data-action="close-dialog">Cancel</button><button class="button primary" type="submit">Protect this time</button></div>
+  </form></dialog>
+
+  <dialog id="detail-dialog" class="dialog" aria-labelledby="detail-title"><div id="detail-content"></div></dialog>
+  <dialog id="focus-dialog" class="dialog focus-dialog" aria-labelledby="focus-title"><div class="dialog-header"><span class="eyebrow">JUST THIS ONE BLOCK</span><button class="icon-button" data-action="close-dialog" aria-label="Close focus view">×</button></div><div class="focus-orbit" aria-hidden="true"><span data-icon="sun"></span></div><h2 id="focus-title">Your next small step</h2><p id="focus-subtitle" class="muted"></p><div class="timer-digits" id="timer-digits" role="timer" aria-label="Focus time remaining">15:00</div><p id="timer-state" class="field-hint">You can begin when you’re ready.</p><div id="focus-step" class="focus-step"></div><div class="timer-controls"><button class="button secondary" data-action="timer-reset" aria-label="Reset focus timer"><span data-icon="reset"></span></button><button class="button primary" data-action="timer-toggle" id="timer-toggle">Start focus</button></div><button class="text-button finish-button" data-action="timer-finish">Mark this block complete <span aria-hidden="true">✓</span></button><p class="field-hint">A pause is part of the process. Your place is saved.</p></dialog>
+  <dialog id="export-dialog" class="dialog" aria-labelledby="export-title"><div class="dialog-header"><div><div class="eyebrow">TAKE YOUR PLAN WITH YOU</div><h2 id="export-title">Export & backup</h2></div><button class="icon-button" data-action="close-dialog" aria-label="Close export">×</button></div><p class="muted">Your data stays in this browser. Download a backup to keep a copy or move to another device.</p><div class="export-options"><button data-action="download-backup"><span data-icon="download"></span><span><strong>Full backup · JSON</strong><small>Tasks, settings, commitments, history & goals</small></span><span>↗</span></button><button data-action="download-csv"><span data-icon="list"></span><span><strong>Selected day · CSV</strong><small>Every scheduled block, 00:00–24:00</small></span><span>↗</span></button><button data-action="download-minutes"><span data-icon="clock"></span><span><strong>Every minute · CSV</strong><small>All 1,440 minutes of the selected day</small></span><span>↗</span></button><button data-action="download-ics"><span data-icon="calendar"></span><span><strong>Calendar events · ICS</strong><small>Focus blocks & commitments in the current period</small></span><span>↗</span></button><button data-action="print"><span data-icon="print"></span><span><strong>Print / save PDF</strong><small>Print the current view from your browser</small></span><span>↗</span></button></div><label class="import-label">Restore a Daylight JSON backup<input type="file" id="import-file" accept="application/json,.json"></label><p class="field-hint">Restoring replaces the current planner after confirmation. Export a backup first if you want to keep it. Browser storage can be cleared; backups are your recovery copy.</p></dialog>
+  <dialog id="confirm-dialog" class="dialog small-dialog" aria-labelledby="confirm-title"><h2 id="confirm-title">Please confirm</h2><p id="confirm-message" class="muted"></p><div class="dialog-footer"><button class="button secondary" data-action="confirm-cancel">Cancel</button><button class="button primary" data-action="confirm-yes">Continue</button></div></dialog>
+  <noscript><div class="noscript">Daylight needs JavaScript enabled to build your schedule. Your files work offline.</div></noscript>
+</body>
+</html>
