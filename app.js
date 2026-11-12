@@ -311,16 +311,16 @@
   let searchDelay;
   document.addEventListener('input', event => {
     if (event.target.id === 'task-search') { search = event.target.value; clearTimeout(searchDelay); searchDelay = setTimeout(() => { const selection = event.target.selectionStart; render(); $('#task-search').focus(); $('#task-search').setSelectionRange(selection, selection); }, 180); }
-    if (event.target.form && event.target.form.id === 'task-form' && event.target.name === 'title') updateAverageHint();
+    if (event.target.form && event.target.form.getAttribute('id') === 'task-form' && event.target.name === 'title') updateAverageHint();
   });
   document.addEventListener('submit', event => {
     const f = event.target; event.preventDefault();
-    if (f.id === 'setup-form') {
+    if (f.getAttribute('id') === 'setup-form') {
       try {
         const profile = { name: f.elements.name.value.trim(), wake: f.elements.wake.value, sleep: f.elements.sleep.value, workStart: f.elements.workStart.value, workEnd: f.elements.workEnd.value, workDays: [...f.querySelectorAll('[name=workDays]:checked')].map(el => Number(el.value)), block: Number(f.elements.block.value), buffer: Number(f.elements.buffer.value) };
         D.validateProfile(profile); state.profile = profile; state.configured = true; save(); $('#setup-dialog').close(); render(); toast('Your daily rhythm is ready. Add tasks and fixed commitments to make it yours.');
       } catch (error) { $('#setup-error').textContent = error.message; }
-    } else if (f.id === 'task-form') {
+    } else if (f.getAttribute('id') === 'task-form') {
       try {
         const existing = state.tasks.find(t => t.id === f.elements.id.value), ready = f.elements.ready.checked;
         function lines(name) { return f.elements[name].value.split('\n').map(s => s.trim()).filter(Boolean).map(text => { if (text.length > 300) throw new Error('Keep each requirement and step under 300 characters.'); const old = existing && existing[name].find(r => r.text === text); return { text, done: name === 'requirements' ? ready : old ? old.done : false }; }); }
@@ -332,15 +332,15 @@
         if (state.timer && state.timer.taskId === task.id) state.timer = null;
         save(); $('#task-dialog').close(); render(); toast(task.requirements.some(r => !r.done) ? 'Task captured. Check off its requirements when you’re ready.' : 'Task saved. Compatible free time has been planned.');
       } catch (error) { $('#task-error').textContent = error.message; }
-    } else if (f.id === 'event-form') {
+    } else if (f.getAttribute('id') === 'event-form') {
       try {
         const existing = state.events.find(e => e.id === f.elements.id.value), commitment = { id: existing ? existing.id : D.uid(), title: f.elements.title.value.trim(), start: f.elements.start.value, end: f.elements.end.value, date: f.elements.date.value, repeat: f.elements.repeat.value, category: f.elements.category.value };
         D.validateEvent(commitment); if (existing) state.events[state.events.indexOf(existing)] = commitment; else state.events.push(commitment);
         save(); $('#event-dialog').close(); render(); toast('Fixed time saved. Any overlaps are flagged on the affected day.');
       } catch (error) { $('#event-error').textContent = error.message; }
-    } else if (f.id === 'goal-form') {
+    } else if (f.getAttribute('id') === 'goal-form') {
       const title = f.elements.goal.value.trim(); if (title) { state.goals.push({ id: D.uid(), title, quarter: quarterKey(selectedDate), done: false }); save(); render(); toast('A little intention, saved.'); }
-    } else if (f.id === 'log-form') {
+    } else if (f.getAttribute('id') === 'log-form') {
       const t = state.tasks.find(t => t.id === detailTaskId), minutes = Number(f.elements.minutes.value);
       if (t && Number.isInteger(minutes) && minutes > 0 && minutes <= 1440) { state.logs.push({ id: D.uid(), title: t.title, minutes, date: selectedDate }); if (state.logs.length > 5000) state.logs.shift(); save(); render(); openDetail(t.id); toast('Full task time recorded. Your own average has been updated.'); }
     }
